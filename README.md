@@ -8,8 +8,39 @@ This repository is **automatically updated** by the Inspection Intel morning pip
 
 | File / folder | What it is |
 |---|---|
-| `transcript_summaries.json` | All summaries keyed by ticker + quarter. Schema: `{ "<TICKER>_Q<n>_<YYYY>": { ticker, quarter, year, title, sections: [...], company, date, source_url } }`. Each summary follows the 5-section format: **KEY HIGHLIGHTS / SUMMARY / Q&A TAKEAWAYS / QoQ COMPARISON / KEY RISKS**. |
+| `transcript_summaries.json` | All summaries keyed by `<TICKER>_Q<n>_<YYYY>`. See **Schema** below for the exact entry shape. |
 | `transcripts/` | Rendered HTML for each individual transcript summary. Named `<TICKER>_Q<n>_<YYYY>.html`. |
+
+## Schema
+
+Each entry in `transcript_summaries.json` is keyed `<TICKER>_Q<n>_<YYYY>` and looks like this:
+
+```json
+{
+  "MG_Q3_2025": {
+    "summary": "**KEY HIGHLIGHTS**\n- Q3 2025 revenue of $195.5 million…\n\n**SUMMARY**\n…\n\n**Q&A TAKEAWAYS**\n…\n\n**QoQ COMPARISON**\n…\n\n**KEY RISKS**\n…",
+    "ticker": "MG",
+    "quarter": 3,
+    "year": 2025,
+    "company": "Mistras Group",
+    "date": "2025-11-05"
+  }
+}
+```
+
+| Field | Type | Always present? | What it is |
+|---|---|---|---|
+| `summary` | string (markdown) | Yes | The 5-section CEO brief: **KEY HIGHLIGHTS / SUMMARY / Q&A TAKEAWAYS / QoQ COMPARISON / KEY RISKS**. Parse sections by splitting on `**<HEADING>**`. |
+| `ticker` | string | Yes (as of 2026-06-09) | The display ticker — same as the prefix of the key. Use this to join with your own ticker map (e.g. `BVI` → yfinance `BVI.PA`). |
+| `quarter` | int 1–4 | Yes (as of 2026-06-09) | Fiscal quarter. |
+| `year` | int (e.g. 2025) | Yes (as of 2026-06-09) | Fiscal year that the quarter belongs to. |
+| `company` | string | Almost always (as of 2026-06-09) | Display company name. Omitted if the ticker isn't in the producer's static map (rare). |
+| `date` | string `YYYY-MM-DD` | Almost always (as of 2026-06-09) | Calendar date the earnings call took place. May be omitted for sources that don't expose a clean date header. |
+| `source_url` | string (URL) | Currently NOT present | Will be populated when the producer migrates from Koyfin to SEC 8-K / Motley Fool (expected ~2 weeks). Until then, omitted. |
+
+**Schema history:**
+- Before 2026-06-09: every entry was just `{ "summary": "<markdown>" }` — no other fields. Older consumers may need to parse ticker/quarter/year from the key.
+- From 2026-06-09: `ticker`, `quarter`, `year`, `company`, `date` added. Additive change — pre-existing `summary` field unchanged.
 
 ## How to consume
 
